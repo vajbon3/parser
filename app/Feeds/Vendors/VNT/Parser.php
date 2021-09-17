@@ -39,7 +39,8 @@ class Parser extends \App\Feeds\Parser\HtmlParser
 
     public function getListPrice(): ?float
     {
-        return $this->getMoney(".ty-price-num") ?? 6.9;
+        // todo
+        return 0.5;
     }
 
     public function getDescription(): string
