@@ -6,15 +6,16 @@ namespace App\Feeds\Vendors\VNT;
 
 use App\Feeds\Feed\FeedItem;
 use App\Feeds\Processor\HttpProcessor;
+use App\Feeds\Processor\SitemapHttpProcessor;
 use App\Feeds\Storage\AbstractFeedStorage;
 use App\Feeds\Utils\Data;
 use App\Feeds\Utils\Link;
 use App\Repositories\DxRepositoryInterface;
 
-class Vendor extends HttpProcessor
+class Vendor extends SitemapHttpProcessor
 {
 
-    protected array $first = [ "https://vanatisanes.com/"];
+    protected array $first = [ "https://vanatisanes.com/product-sitemap.xml"];
 
     protected const CHUNK_SIZE = 10;
     protected const DELAY_S = 3;
@@ -29,8 +30,8 @@ class Vendor extends HttpProcessor
         "Host" => "vanatisanes.com"
     ];
 
-    public const CATEGORY_LINK_CSS_SELECTORS = [".menu-item > a"];
-    public const PRODUCT_LINK_CSS_SELECTORS = [".product-category.product-info"];
+    //public const CATEGORY_LINK_CSS_SELECTORS = [".menu-item > a"];
+    //public const PRODUCT_LINK_CSS_SELECTORS = [".product-category.product-info"];
 
     public function filterProductLinks(Link $link): bool
     {
@@ -56,12 +57,13 @@ class Vendor extends HttpProcessor
     public function afterProcess()
     {
         foreach($this->feed_items as $feed_item) {
-            $i = 0;
             foreach($feed_item->child_products as &$child_product) {
+                $i = 0;
                 if(isset($child_product->alt_names[0])) {
                     $child_product = clone $this->feed[$child_product->alt_names[0]];
-                    $child_product->setMpn($feed_item->getProduct()."-".$i);
-                    $child_product->setProductCode($feed_item->getProductCode()."-".$i);
+                    echo "bundle: ".$feed_item->getProduct()." child:".$child_product->getProduct().PHP_EOL;
+                    $child_product->mpn = $child_product->product."-".$i;
+                    $child_product->productcode = $this->getSupplierName()."-".$child_product->getProduct()."-".$i;
                     $i++;
 
                     // ставим скидочную цену
@@ -76,7 +78,6 @@ class Vendor extends HttpProcessor
         foreach($fi->child_products as &$childProduct) {
             $original_price = $childProduct->getListPrice() ?? 0.0;
             $childProduct->setCostToUs($original_price - (15/100 * $original_price));
-            echo $childProduct->product." discount price: ".$childProduct->cost_to_us.PHP_EOL;
         }
     }
 }

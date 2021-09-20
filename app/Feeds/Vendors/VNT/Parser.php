@@ -95,13 +95,13 @@ class Parser extends \App\Feeds\Parser\HtmlParser
             foreach($this->variations as $variation) {
             $fi = clone $parent_fi;
 
-            $fi->setProductCode($this->getVendor()->getSupplierName() . "-" . $i);
+            $fi->setProductCode($fi->productcode."-". $i);
             $fi->setMpn($variation["sku"]."-".$i);
             $fi->setCostToUs(StringHelper::getMoney($variation["display_price"]));
             $fi->setListPrice(StringHelper::getMoney($variation["display_regular_price"]));
             $fi->setRAvail($variation["is_in_stock"] ? self::DEFAULT_AVAIL_NUMBER : 0);
             $fi->setImages($this->parseSrcset($variation["image"]["srcset"]));
-
+            $fi->setAttributes($this->parseAttributes($variation));
             $i++;
             array_push($child,$fi);
         }
@@ -118,11 +118,13 @@ class Parser extends \App\Feeds\Parser\HtmlParser
                 if (isset($this->getVendor()->feed[$productName])) {
                     $product = clone $this->getVendor()->feed[$productName];
                     $product->setMpn($product->getProduct() . "-" . $i);
-                    $product->setProductCode($this->getVendor()->getSupplierName() . "-" . $i);
+                    $product->setProductCode($this->getVendor()->getSupplierName() . "-" . $product->getProduct(). "-" . $i);
                 }
                 else {
                     $product = clone $parent_fi;
                     $product->setAltNames([$productName]);
+                    $product->setMpn($product->getProduct() . "-" . $i);
+                    $product->setProductCode($this->getVendor()->getSupplierName() . "-". $i);
                 }
 
                 // ставим скидучную цену
@@ -132,7 +134,13 @@ class Parser extends \App\Feeds\Parser\HtmlParser
                 $i++;
                 array_push($child,$product);
             });
+            echo "bundle: ".$parent_fi->getProduct()." children:".PHP_EOL;
+            foreach($child as $kid) {
+                echo $kid->getProduct() . " ";
+            }
+            echo PHP_EOL;
         }
+
 
         return $child;
     }
@@ -166,7 +174,7 @@ class Parser extends \App\Feeds\Parser\HtmlParser
     {
         $attributes = [];
         foreach($variation["attributes"] as $key => $value) {
-            $attributes[$key] = $value;
+            $attributes[$key] = ltrim($value, '$');
         }
 
         return $attributes;
