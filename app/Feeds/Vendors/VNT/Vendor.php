@@ -40,44 +40,11 @@ class Vendor extends SitemapHttpProcessor
 
     public function isValidFeedItem(FeedItem $fi): bool
     {
-        return $fi->getProduct() !== null;
-    }
-
-    // индексируем каждый новый FeedItem в мап feed для O(1) поиска
-    public function afterProcessItem()
-    {
-        $last_key = key(array_slice($this->feed_items, -1, 1, true));
-        if($last_key != "") {
-            $item = $this->feed_items[$last_key];
-            $this->feed[$item->getProduct()] = &$item;
-        }
-    }
-
-    // вставим дочерные продукты которые ешё не вставлени
-    public function afterProcess()
-    {
-        foreach($this->feed_items as $feed_item) {
-            foreach($feed_item->child_products as &$child_product) {
-                $i = 0;
-                if(isset($child_product->alt_names[0])) {
-                    $child_product = clone $this->feed[$child_product->alt_names[0]];
-                    echo "bundle: ".$feed_item->getProduct()." child:".$child_product->getProduct().PHP_EOL;
-                    $child_product->mpn = $child_product->product."-".$i;
-                    $child_product->productcode = $this->getSupplierName()."-".$child_product->getProduct()."-".$i;
-                    $i++;
-
-                    // ставим скидочную цену
-                    $this->setBundleProductPrice($child_product);
-                }
-            }
-        }
+        return !$this->isBundle($fi);
     }
 
     // хелпер методы
-    public function setBundleProductPrice(&$fi) {
-        foreach($fi->child_products as &$childProduct) {
-            $original_price = $childProduct->getListPrice() ?? 0.0;
-            $childProduct->setCostToUs($original_price - (15/100 * $original_price));
-        }
+    public function isBundle(FeedItem $fi): bool {
+        return $fi->getCategories()[0] === "Bundles";
     }
 }
