@@ -107,7 +107,6 @@ class Parser extends \App\Feeds\Parser\HtmlParser
             $fi->setListPrice(StringHelper::getMoney($variation["display_regular_price"]));
             $fi->setRAvail($variation["is_in_stock"] ? self::DEFAULT_AVAIL_NUMBER : 0);
             $fi->setImages($this->parseSrcset($variation["image"]["srcset"]));
-            $fi->setAttributes($this->parseAttributes($variation));
             $i++;
             array_push($child, $fi);
 
