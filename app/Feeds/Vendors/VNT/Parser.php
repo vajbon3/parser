@@ -5,13 +5,28 @@ namespace App\Feeds\Vendors\VNT;
 
 
 use App\Feeds\Feed\FeedItem;
+use App\Feeds\Utils\Data;
 use App\Feeds\Utils\ParserCrawler;
 use App\Helpers\StringHelper;
+use Dotenv\Util\Str;
 use JetBrains\PhpStorm\Pure;
 
 class Parser extends \App\Feeds\Parser\HtmlParser
 {
     public array $variations;
+
+    public function parseContent(Data $data, array $params = []): array
+    {
+        if(!StringHelper::isNotEmpty($data->getData())) {
+            $data = $this->getVendor()->getDownloader()->get($params["url"]);
+        }
+
+        if(!StringHelper::isNotEmpty($data->getData())) {
+            return [];
+        }
+
+        return parent::parseContent($data, $params);
+    }
 
     // взять json дочерных продуктов с саита
     public function beforeParse(): void
@@ -105,11 +120,20 @@ class Parser extends \App\Feeds\Parser\HtmlParser
     private function parseSrcset(string $srcset)
     {
         $arr = explode(",", $srcset);
+        $largestSize = 0;
+        $largestSrc = "";
         foreach ($arr as &$str) {
-            $str = explode(" ", trim($str))[0];
+            $array = explode(" ", trim($str));
+            $size = intval(substr($array[1],0,-1));
+            $src = $array[0];
+
+            if($largestSize < $size) {
+                $largestSrc = $src;
+                $largestSize = $size;
+            }
         }
 
-        return $arr;
+        return [$largestSrc];
     }
 
     private
