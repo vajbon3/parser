@@ -62,7 +62,7 @@ class Parser extends \App\Feeds\Parser\HtmlParser
     {
         $categories = [];
         $this->filter(".posted_in a")->each(function (ParserCrawler $c) use (&$categories) {
-            $categories[] = $c->text();
+            $categories[] = strtolower($c->text());
         });
 
         return $categories;

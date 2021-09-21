@@ -40,11 +40,11 @@ class Vendor extends SitemapHttpProcessor
 
     public function isValidFeedItem(FeedItem $fi): bool
     {
-        return !$this->isBundle($fi);
+        return !in_array("Bundles", $fi->getCategories(), true) && !in_array("Gifts", $fi->getCategories(), true);
     }
 
     // хелпер методы
     public function isBundle(FeedItem $fi): bool {
-        return $fi->getCategories()[0] === "Bundles";
+        return in_array("Bundles", $fi->getCategories(), true);
     }
 }
